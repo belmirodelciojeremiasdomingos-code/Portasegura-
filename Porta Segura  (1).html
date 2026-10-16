@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="utf-8"><title>PortaSegura · Controlo de Acessos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#08203a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="PortaSegura"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6f8;--card:#fff;--tx:#14202b;--mu:#667685;--bd:#dde3e9;--pr:#0b5cab;--ok:#1e8e3e;--no:#c62828;--wa:#e8a317}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1419;--card:#18202a;--tx:#e8eef4;--mu:#8fa0b0;--bd:#2a3541;--pr:#4a9eff;--ok:#4cc26b;--no:#ff6b6b}}
+:root[data-theme="dark"]{--bg:#0f1419;--card:#18202a;--tx:#e8eef4;--mu:#8fa0b0;--bd:#2a3541;--pr:#4a9eff;--ok:#4cc26b;--no:#ff6b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:auto;padding:12px}
+h1{font-size:19px;margin:4px 0 2px}small,.mu{color:var(--mu)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.clock{font-variant-numeric:tabular-nums;font-weight:600}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 0}
+nav button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:20px;font-size:14px}
+nav button.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.kpi{font-size:28px;font-weight:700}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 2px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+.btn{border:0;border-radius:8px;padding:11px 14px;font-weight:600;color:#fff;background:var(--pr);font-size:15px}
+.btn.ok{background:var(--ok)}.btn.no{background:var(--no)}.btn.gh{background:transparent;color:var(--pr);border:1px solid var(--bd)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--bd)}
+.row:first-child{border-top:0}
+.tag{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--bd);color:var(--tx)}
+.in{background:var(--ok);color:#fff}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+:root{--bg:#eef1f5;--g1:#f8fafc;--g2:#dde5ee;--card:#fff;--pr:#0a2540;--ac:#b08d3c;--bd:#d7dee7;--on:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1320;--g1:#101d31;--g2:#060b14;--card:#12203a;--pr:#c9a24a;--ac:#c9a24a;--bd:#223350;--tx:#e8eef6;--mu:#93a4b8;--on:#0b1320}}
+html{background:linear-gradient(160deg,var(--g1),var(--g2)) fixed;min-height:100%}
+body{background:transparent}
+.top{background:linear-gradient(120deg,#08203a,#17456f);color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(8,32,58,.28);border-bottom:3px solid #c9a24a}
+.top h1{letter-spacing:.4px}.top small,.top .clock{color:#cfdbea}
+.card{box-shadow:0 2px 12px rgba(8,32,58,.08);border-radius:14px}
+nav button{box-shadow:0 1px 3px rgba(8,32,58,.08)}nav button.on{background:var(--pr);color:var(--on);border-color:var(--pr)}
+.btn{color:var(--on)}.btn.ok,.btn.no{color:#fff}
+pre{font-family:inherit;font-size:13px}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script></head><body>
+<div class="top"><div><h1>🛡️ PortaSegura</h1><small id="sub">Controlo de acessos · Edifício Sede</small></div><div class="clock" id="clk"></div></div>
+<nav id="nav"></nav><div id="v"></div>
+<script>
+const T={col:{n:"Colaboradores",ic:"👷",f:[["pass","Nº SAP / Passe"],["name","Nome"],["area","Área"],["floor","Andar"]]},
+vis:{n:"Visitantes",ic:"🧑‍💼",f:[["name","Nome do visitante"],["doc","Nº BI / Passaporte"],["phone","Telefone"],["host","Nome do visitado"],["dept","Direcção / Dept."],["pass","Nº de passe"]]},
+key:{n:"Chaves",ic:"🔑",f:[["area","Área"],["name","Recebido por"],["by","Entregue por"]]},
+fds:{n:"Fins de semana",ic:"📅",f:[["name","Nome do colaborador"],["pass","Nº do passe"],["area","Área"],["floor","Andar"]]}};
+let D=[],tab="home",q="";
+const ld=()=>{try{D=JSON.parse(localStorage.getItem("ps")||"[]")}catch(e){D=[]}};
+const sv=()=>{try{localStorage.setItem("ps",JSON.stringify(D))}catch(e){}};
+const hm=t=>t?new Date(t).toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"}):"—";
+const dt=t=>new Date(t).toLocaleDateString("pt-PT");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const inside=ty=>D.filter(r=>!r.out&&(!ty||r.type===ty));
+function nav0(){document.getElementById("nav").innerHTML=[["home","📊 Painel"],...Object.entries(T).map(([k,v])=>[k,v.ic+" "+v.n]),["log","🗂️ Histórico"]].map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
+function go(k){tab=k;q="";nav();render()}
+function render0(){const v=document.getElementById("v");
+ if(tab==="home"){const o=inside();
+  v.innerHTML=`<div class="grid">${Object.entries(T).map(([k,t])=>`<div class="card"><small>${t.ic} ${t.n} dentro</small><div class="kpi">${inside(k).length}</div></div>`).join("")}</div>
+  <div class="card"><b>Neste momento no edifício (${o.length})</b>${o.length?o.map(r=>row(r)).join(""):'<p class="mu">Ninguém registado. Use os separadores acima.</p>'}</div>
+  <div class="card"><small>Os dados ficam guardados neste dispositivo e funcionam sem internet. Para multi-posto e sincronização, ligar a uma base de dados central.</small><br><br><button class="btn gh" onclick="demo()">Carregar dados de exemplo</button></div>`;}
+ else if(tab==="log"){const l=D.filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())).slice().reverse();
+  v.innerHTML=`<div class="card"><input id="s" placeholder="Pesquisar nome, documento, área…" value="${esc(q)}" oninput="q=this.value;render();document.getElementById('s').focus()"><br><br><button class="btn" onclick="csv()">⬇️ Exportar CSV (Excel)</button></div>
+  <div class="card sc"><table><tr><th>Tipo</th><th>Nome</th><th>Data</th><th>Entrada</th><th>Saída</th><th>Detalhe</th></tr>${l.map(r=>`<tr><td>${T[r.type].ic}</td><td>${esc(r.name)}</td><td>${dt(r.in)}</td><td>${hm(r.in)}</td><td>${hm(r.out)}</td><td>${esc(r.area||r.host||"")}</td></tr>`).join("")}</table></div>`;}
+ else{const t=T[tab];const ins=inside(tab);
+  v.innerHTML=`<div class="card"><b>${t.ic} Nova entrada · ${t.n}</b><form onsubmit="return false"><div class="f2">${t.f.map(([k,l])=>`<div><label>${l}</label><input id="f_${k}" ${k==="name"?'list="dl"':""}></div>`).join("")}</div>${tab==="vis"?'<label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="cons" style="width:auto"> O visitante autorizou o registo dos seus dados pessoais</label>':""}</form>
+  <br><button class="btn ok" onclick="add()">✔ Registar entrada (hora automática)</button></div>
+  <div class="card"><b>Dentro agora (${ins.length})</b>${ins.map(r=>row(r)).join("")||'<p class="mu">Nenhum.</p>'}</div>`;}}
+function row(r){return `<div class="row"><div><b>${esc(r.name)}</b> <span class="tag">${T[r.type].n}</span><br><small>${esc(r.area||r.host||"")} · entrou ${hm(r.in)}</small></div><button class="btn no" onclick="out('${r.id}')">Saída</button></div>`}
+function add(){const t=T[tab],r={id:"r"+Date.now(),type:tab,in:Date.now(),out:null,u:U.n};
+ t.f.forEach(([k])=>r[k]=document.getElementById("f_"+k).value.trim());
+ if(!r.name){alert("Indique o nome.");return}if(tab==="vis"){if(!document.getElementById("cons").checked){alert("É necessário o consentimento do visitante.");return}r.c=1}
+ D.push(r);sv();log("entrada",r.id);render()}
+function out(id){const r=D.find(x=>x.id===id);if(r){r.out=Date.now();r.uo=U.n;sv();log("saida",r.id);render()}}
+function csv(){const h=["tipo","nome","documento","telefone","visitado","departamento","area","andar","passe","entrada","saida"];
+ const s=[h.join(";")].concat(D.map(r=>[T[r.type].n,r.name,r.doc,r.phone,r.host,r.dept,r.area,r.floor,r.pass,new Date(r.in).toLocaleString("pt-PT"),r.out?new Date(r.out).toLocaleString("pt-PT"):""].map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(";"))).join("\n");
+ log("exportacao","historico");dl("registos.csv","\uFEFF"+s)}
+function demo(){const n=Date.now(),m=x=>n-x*60000;
+ D.push({id:"d1",type:"col",name:"Ana Ferreira",pass:"10234",area:"Finanças",floor:"3º",in:m(190),out:null},
+ {id:"d2",type:"vis",name:"Carlos Mendes",doc:"0001234LA045",phone:"923000000",host:"Rita Costa",dept:"RH",pass:"V12",in:m(40),out:null},
+ {id:"d3",type:"key",name:"Segurança Geral",area:"Sala de reuniões",by:"Recepção",in:m(75),out:null},
+ {id:"d4",type:"vis",name:"Paulo Neto",doc:"006789LA041",host:"Rita Costa",dept:"RH",in:m(300),out:m(240)});sv();render()}
+setInterval(()=>document.getElementById("clk").textContent=new Date().toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"medium"}),1000);
+const SALT="ps1:";let USERS=[];
+const svu=()=>{try{localStorage.setItem("ps_u",JSON.stringify(USERS))}catch(e){}};
+async function hp(p){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(SALT+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return SALT+p}}
+async function initU(){try{USERS=JSON.parse(localStorage.getItem("ps_u")||"null")||[]}catch(e){USERS=[]}
+if(!USERS.length){USERS=[{n:"Porteiro",r:"porteiro",h:await hp("1111"),d:1,i:1},{n:"Supervisor",r:"supervisor",h:await hp("2222"),d:1,i:1},{n:"Administrador",r:"admin",h:await hp("1234"),d:1,i:1}];svu()}}
+let U=null,P=[],fails=0,lock=0,idle,stream,scanning=false,lastC="",lastT=0;
+const ldp=()=>{try{P=JSON.parse(localStorage.getItem("ps_p")||"[]")}catch(e){P=[]}};
+const svp=()=>{try{localStorage.setItem("ps_p",JSON.stringify(P))}catch(e){}};
+function bump(){clearTimeout(idle);idle=setTimeout(()=>{U=null;stop();nav()},300000)}
+["click","keydown","touchstart"].forEach(e=>addEventListener(e,bump));
+function login(){document.getElementById("nav").innerHTML="";document.getElementById("v").innerHTML=`<div class="card"><b>🔐 Iniciar sessão</b><label>Perfil</label><select id="lu">${USERS.map((u,i)=>`<option value="${i}">${u.n} (${u.r})</option>`).join("")}</select><label>PIN</label><input id="lp" type="password" inputmode="numeric"><br><br><button class="btn" onclick="doLogin()">Entrar</button><p><small class="mu">${USERS.some(u=>u.i)?"PINs iniciais: Porteiro 1111 · Supervisor 2222 · Administrador 1234 (obrigatório mudar no primeiro acesso). ":""}Sessão termina após 5 min sem uso.</small></p></div>`}
+async function doLogin(){if(Date.now()<lock){alert("Bloqueado. Aguarde 30 s.");return}const u=USERS[document.getElementById("lu").value];if(await hp(document.getElementById("lp").value)===u.h){U=u;fails=0;tab=u.d?"cfg":"home";bump();nav();render()}else{if(++fails>=3){lock=Date.now()+30000;fails=0}alert("PIN incorrecto")}}
+function nav(){if(!U)return login();nav0();const n=document.getElementById("nav");
+if(U.r==="porteiro")n.querySelectorAll("button").forEach(b=>{if(b.textContent.includes("Hist"))b.remove()});
+const a=[["cfg","⚙️ PIN"],["scan","📷 Ler QR"]];if(U.r!=="porteiro")a.push(["rep","📑 Fecho"],["pas","🎫 Passes QR"]);
+n.insertAdjacentHTML("beforeend",a.map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+`<button onclick="U=null;stop();nav()">🚪 Sair · ${U.n}</button>`)}
+function render(){if(!U)return login();if(tab!=="scan")stop();if((tab==="log"||tab==="pas"||tab==="rep")&&U.r==="porteiro")tab="home";if(tab==="rep")return repV();if(tab==="cfg")return cfgV();if(tab==="scan")return scanV();if(tab==="pas")return pasV();render0()}
+function msg(t,ok){const m=document.getElementById("res");if(m){m.textContent=t;m.style.background=ok?"var(--ok)":"var(--no)";m.style.display="block"}}
+function scanV(){document.getElementById("v").innerHTML=`<div class="card"><b>📷 Ler passe QR</b><br><br><video id="vid" playsinline muted style="width:100%;border-radius:10px;background:#000;max-height:300px"></video><br><br><button class="btn" onclick="cam()">Ligar câmara</button><label>Ou introduza o código do passe</label><input id="mc" placeholder="PS-XXXXXXXX"><br><br><button class="btn gh" onclick="scanCode(document.getElementById('mc').value)">Validar código</button></div><div id="res" class="card" style="display:none;color:#fff;font-weight:700;font-size:17px"></div><p class="mu"><small>Lê o QR: se a pessoa está fora, regista ENTRADA; se está dentro, regista SAÍDA.</small></p>`}
+async function cam(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});const v=document.getElementById("vid");v.srcObject=stream;await v.play();scanning=true;tick()}catch(e){msg("Câmara indisponível. Use o código manual.",0)}}
+function tick(){if(!scanning)return;const v=document.getElementById("vid");if(!v){stop();return}
+if(v.readyState===4&&window.jsQR){const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;const x=c.getContext("2d");x.drawImage(v,0,0);const im=x.getImageData(0,0,c.width,c.height);const r=jsQR(im.data,c.width,c.height);if(r&&r.data&&(r.data!==lastC||Date.now()-lastT>4000)){lastC=r.data;lastT=Date.now();scanCode(r.data)}}
+requestAnimationFrame(tick)}
+function stop(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+function scanCode(c){c=String(c).trim().toUpperCase();const p=P.find(x=>x.code===c);if(p&&p.x&&Date.now()>p.x){log("passe_expirado",p.id);msg("⛔ Passe expirado",0);return}if(!p){log("passe_invalido");msg("❌ Passe inválido",0);return}
+const o=D.find(r=>r.pid===p.id&&!r.out);
+if(o){o.out=Date.now();o.uo=U.n;msg("🔴 SAÍDA · "+p.name+" · "+hm(o.out),0)}
+else{D.push({id:"r"+Date.now(),type:p.type,name:p.name,area:p.area,pid:p.id,in:Date.now(),out:null,u:U.n});msg("🟢 ENTRADA · "+p.name+" · "+hm(Date.now()),1)}sv();log("passe_lido",p.id)}
+function pasV(){document.getElementById("v").innerHTML=`<div class="card"><b>🎫 Novo passe QR</b><div class="f2"><div><label>Nome</label><input id="pn"></div><div><label>Tipo</label><select id="pt"><option value="col">Colaborador</option><option value="vis">Visitante</option><option value="fds">Fim de semana</option></select></div><div><label>Área / Visitado</label><input id="pa"></div><div><label>Validade</label><select id="pv"><option value="1">1 dia</option><option value="7">7 dias</option><option value="30">30 dias</option><option value="0">Sem limite</option></select></div></div><br><button class="btn" onclick="newPass()">Gerar passe</button></div>`+P.map(p=>`<div class="card row" style="align-items:flex-start"><div id="q_${p.id}" style="background:#fff;padding:4px;border-radius:6px"></div><div style="flex:1"><b>${esc(p.name)}</b><br><small>${T[p.type].n} · ${esc(p.area)}<br>${p.code}${p.x?" · expira "+dt(p.x):""}</small></div><button class="btn gh" onclick="delP('${p.id}')">✕</button></div>`).join("");
+P.forEach(p=>{try{new QRCode(document.getElementById("q_"+p.id),{text:p.code,width:96,height:96})}catch(e){}})}
+function newPass(){const n=document.getElementById("pn").value.trim();if(!n){alert("Indique o nome.");return}
+const c="PS-"+Math.random().toString(36).slice(2,10).toUpperCase();P.push({id:"p"+Date.now(),name:n,type:document.getElementById("pt").value,area:document.getElementById("pa").value.trim(),code:c,x:(+document.getElementById("pv").value)?Date.now()+864e5*(+document.getElementById("pv").value):0});svp();log("passe_criado",c);pasV()}
+function delP(id){P=P.filter(p=>p.id!==id);svp();pasV()}
+const okp=p=>/^\d{4,8}$/.test(p);
+function cfgV0(){const adm=U.r==="admin";
+document.getElementById("v").innerHTML=`<div class="card"><b>⚙️ Alterar o meu PIN</b>${U.d?'<p style="color:var(--no)"><small>Tem de definir um novo PIN antes de continuar.</small></p>':""}<label>PIN actual</label><input id="c0" type="password" inputmode="numeric"><label>Novo PIN (4 a 8 dígitos)</label><input id="c1" type="password" inputmode="numeric"><label>Confirmar novo PIN</label><input id="c2" type="password" inputmode="numeric"><br><br><button class="btn" onclick="chgPin()">Guardar PIN</button></div>`+(adm?`<div class="card"><b>🛠️ Redefinir PIN de um perfil</b><label>Perfil</label><select id="r0">${USERS.map((u,i)=>`<option value="${i}">${u.n}</option>`).join("")}</select><label>Novo PIN (4 a 8 dígitos)</label><input id="r1" type="password" inputmode="numeric"><br><br><button class="btn gh" onclick="rstPin()">Redefinir</button><p><small class="mu">O perfil redefinido terá de escolher o seu próprio PIN no próximo acesso.</small></p></div>`:"")}
+async function chgPin(){const g=i=>document.getElementById(i).value;
+if(!(await chk(U,g("c0")))){alert("PIN actual incorrecto");return}
+if(!okp(g("c1"))){alert("O novo PIN deve ter 4 a 8 dígitos.");return}
+if(g("c1")!==g("c2")){alert("Os PINs novos não coincidem.");return}
+if(["1111","2222","1234"].includes(g("c1"))){alert("Escolha um PIN diferente dos iniciais.");return}
+await setPin(U,g("c1"));U.d=0;U.i=0;svu();log("pin_alterado");alert("PIN alterado.");tab="home";nav();render()}
+async function rstPin(){const p=document.getElementById("r1").value;if(!okp(p)){alert("O PIN deve ter 4 a 8 dígitos.");return}
+const u=USERS[document.getElementById("r0").value];await setPin(u,p);u.i=0;u.d=(u===U?0:1);svu();log("pin_redefinido",u.n);alert("PIN de "+u.n+" redefinido.");cfgV()}
+function cfgV(){cfgV0();if(U.r!=="admin")return;bkCard();secCard();
+document.getElementById("v").insertAdjacentHTML("beforeend",`<div class="card"><b>👥 Utilizadores</b>${USERS.map((u,i)=>`<div class="row"><div><b>${esc(u.n)}</b><br><small>${u.r}${u===U?" · você":""}</small></div>${u===U?"":`<button class="btn no" onclick="delU(${i})">Remover</button>`}</div>`).join("")}<br><b>Novo utilizador</b><div class="f2"><div><label>Nome</label><input id="n0"></div><div><label>Perfil</label><select id="n1"><option value="porteiro">Porteiro</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div><div><label>PIN inicial (4 a 8 dígitos)</label><input id="n2" type="password" inputmode="numeric"></div></div><br><button class="btn" onclick="addU()">Criar utilizador</button><p><small class="mu">O novo utilizador escolhe o seu próprio PIN no primeiro acesso.</small></p></div>`)}
+async function addU(){const n=document.getElementById("n0").value.trim(),p=document.getElementById("n2").value;
+if(!n){alert("Indique o nome.");return}if(!okp(p)){alert("PIN de 4 a 8 dígitos.");return}
+if(USERS.some(u=>u.n.toLowerCase()===n.toLowerCase())){alert("Já existe um utilizador com esse nome.");return}
+const nu={n,r:document.getElementById("n1").value,d:1,i:0};await setPin(nu,p);USERS.push(nu);svu();log("utilizador_criado",n);cfgV()}
+function delU(i){const u=USERS[i];if(u===U)return;if(u.r==="admin"&&USERS.filter(x=>x.r==="admin").length<2){alert("Tem de existir pelo menos um administrador.");return}
+if(confirm("Remover "+u.n+"?")){USERS.splice(i,1);svu();log("utilizador_removido",u.n);cfgV()}}
+let RD=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),RS={};
+try{RS=JSON.parse(localStorage.getItem("ps_s")||"{}")}catch(e){}
+const gv=i=>document.getElementById(i).value;
+function rep(d){const a=new Date(d+"T00:00:00").getTime(),b=a+864e5;
+const en=D.filter(r=>r.in>=a&&r.in<b),sa=D.filter(r=>r.out&&r.out>=a&&r.out<b),di=D.filter(r=>r.in<b&&(!r.out||r.out>=b));
+const by=l=>Object.keys(T).map(k=>T[k].n+": "+l.filter(r=>r.type===k).length).join(" | ");
+return{en,sa,di,txt:`RELATÓRIO DE FECHO · Controlo de Acessos\nInstalação: Edifício Sede\nData: ${new Date(a).toLocaleDateString("pt-PT")}\nEmitido por: ${U.n} às ${hm(Date.now())}\n\nENTRADAS: ${en.length}\n${by(en)}\nSAÍDAS: ${sa.length}\n${by(sa)}\nAINDA NO EDIFÍCIO: ${di.length}\n${di.map(r=>"- "+r.name+" ("+T[r.type].n+", entrou "+hm(r.in)+")").join("\n")}\n\n${di.length?"ATENÇÃO: há pessoas sem saída registada.":"Todas as pessoas registadas saíram."}`}}
+function repV(){const R=rep(RD);
+document.getElementById("v").innerHTML=`<div class="card"><b>📑 Relatório de fecho</b><label>Data</label><input type="date" id="rd" value="${RD}" onchange="RD=this.value;repV()"><div class="grid" style="margin-top:10px"><div class="card"><small>Entraram</small><div class="kpi">${R.en.length}</div></div><div class="card"><small>Saíram</small><div class="kpi">${R.sa.length}</div></div><div class="card"><small>Ainda dentro</small><div class="kpi" style="color:${R.di.length?"var(--no)":"var(--ok)"}">${R.di.length}</div></div></div></div><div class="card"><b>Pré-visualização</b><pre style="white-space:pre-wrap;margin:8px 0 0">${esc(R.txt)}</pre></div><div class="card"><b>Enviar à segurança patrimonial</b><label>Nome da entidade</label><input id="sn" value="${esc(RS.n||"")}" placeholder="Ex.: Segurança Patrimonial"><div class="f2"><div><label>Email</label><input id="se" type="email" value="${esc(RS.e||"")}"></div><div><label>WhatsApp (com indicativo)</label><input id="sp" inputmode="tel" value="${esc(RS.p||"")}" placeholder="244923000000"></div></div><br><div class="f2" style="gap:8px"><button class="btn" onclick="sendR('mail')">✉️ Email</button><button class="btn ok" onclick="sendR('wa')">💬 WhatsApp</button><button class="btn gh" onclick="sendR('share')">📤 Partilhar…</button><button class="btn gh" onclick="sendR('copy')">📋 Copiar</button></div><br><button class="btn gh" onclick="sendR('csv')">⬇️ Descarregar CSV do dia</button></div>`}
+async function sendR(m){log("relatorio_"+m,RD);RS={n:gv("sn"),e:gv("se"),p:gv("sp")};try{localStorage.setItem("ps_s",JSON.stringify(RS))}catch(e){}
+const R=rep(RD),t=R.txt,sub="Relatório de fecho - "+new Date(RD+"T00:00:00").toLocaleDateString("pt-PT");
+if(m==="mail")window.open("mailto:"+encodeURIComponent(RS.e)+"?subject="+encodeURIComponent(sub)+"&body="+encodeURIComponent(t),"_blank");
+else if(m==="wa")window.open("https://wa.me/"+RS.p.replace(/\D/g,"")+"?text="+encodeURIComponent(t),"_blank");
+else if(m==="share"){try{await navigator.share({title:sub,text:t})}catch(e){alert("Partilha não disponível neste aparelho. Use Email, WhatsApp ou Copiar.")}}
+else if(m==="copy"){try{await navigator.clipboard.writeText(t);alert("Relatório copiado.")}catch(e){alert("Não foi possível copiar.")}}
+else{const ids=new Set([...R.en,...R.sa,...R.di].map(r=>r.id));const s=["tipo;nome;area_ou_visitado;entrada;saida;operador"].concat(D.filter(r=>ids.has(r.id)).map(r=>[T[r.type].n,r.name,r.area||r.host||"",new Date(r.in).toLocaleString("pt-PT"),r.out?new Date(r.out).toLocaleString("pt-PT"):"",r.u||""].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(";"))).join("\n");
+log("exportacao","fecho");dl("fecho-"+RD+".csv","\uFEFF"+s)}}
+async function dl(n,s){try{const d=window.claude&&await claude.use("downloads");if(d){await d.save({filename:n,data:s});return}}catch(e){if(e&&e.code==="declined")return}
+const a=document.createElement("a");a.href="data:text/plain;charset=utf-8,"+encodeURIComponent(s);a.download=n;a.click()}
+function bkCard(){document.getElementById("v").insertAdjacentHTML("beforeend",`<div class="card"><b>💾 Cópia de segurança</b><p><small class="mu">Guarde um ficheiro com todos os registos, passes e utilizadores. Faça-o com regularidade e sempre antes de limpar os dados do browser.</small></p><label>Palavra-passe da cópia (mínimo 8 caracteres)</label><input id="bpw" type="password" autocomplete="new-password"><br><br><button class="btn" onclick="bkExp()">⬇️ Guardar cópia</button><label>Restaurar a partir de ficheiro</label><input type="file" accept=".json" onchange="bkImp(this)"></div>`)}
+function bkExp(){dl("portasegura-backup-"+RD+".json",JSON.stringify({v:1,t:Date.now(),D,P,USERS}))}
+function bkImp(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!Array.isArray(o.D)||!Array.isArray(o.P)||!Array.isArray(o.USERS)||!o.USERS.length)throw 0;if(!confirm("Substituir todos os dados actuais por esta cópia?"))return;D=o.D;P=o.P;USERS=o.USERS;sv();svp();svu();U=null;alert("Cópia restaurada. Inicie sessão novamente.");nav()}catch(e){alert("Ficheiro inválido.")}};r.readAsText(f)}
+let A=[],RET=90;
+try{A=JSON.parse(localStorage.getItem("ps_a")||"[]")}catch(e){A=[]}
+try{const v=localStorage.getItem("ps_ret");RET=v===null?90:+v}catch(e){}
+const hex=u=>[...new Uint8Array(u)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const sha=async s=>hex(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)));
+const rs=()=>hex(crypto.getRandomValues(new Uint8Array(16)));
+const b64=u=>{let s="";for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+const ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function log(ev,det){try{const p=A.length?A[A.length-1].h:"0";const e={t:Date.now(),u:U?U.n:"-",ev,det:det||""};e.h=await sha(p+JSON.stringify(e));A.push(e);localStorage.setItem("ps_a",JSON.stringify(A))}catch(x){}}
+async function verA(){let p="0";for(const e of A){const{h,...r}=e;if(await sha(p+JSON.stringify(r))!==h)return false;p=h}return true}
+async function kdf(pin,salt){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pin),"PBKDF2",false,["deriveBits"]);return hex(await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:new TextEncoder().encode(salt),iterations:600000},k,256))}
+async function setPin(u,pin){u.s=rs();u.h=await kdf(pin,u.s)}
+async function chk(u,pin){if(u.s)return await kdf(pin,u.s)===u.h;if(await hp(pin)===u.h){await setPin(u,pin);svu();return true}return false}
+async function doLogin(){let L={};try{L=JSON.parse(localStorage.getItem("ps_l")||"{}")}catch(e){}
+if(Date.now()<(L.u||0)){alert("Acesso bloqueado. Tente novamente em "+Math.ceil((L.u-Date.now())/1000)+" s.");return}
+const u=USERS[document.getElementById("lu").value],p=document.getElementById("lp").value;
+if(await chk(u,p)){U=u;try{localStorage.removeItem("ps_l")}catch(e){}tab=u.d?"cfg":"home";bump();await log("login","ok");nav();render()}
+else{const f=(L.f||0)+1,w=f>=3?Math.min(30*2**(f-3),900)*1000:0;try{localStorage.setItem("ps_l",JSON.stringify({f,u:Date.now()+w}))}catch(e){}U=null;await log("login_falhou",u.n);alert("PIN incorrecto"+(w?". Bloqueado "+w/1000+" s.":""))}}
+async function ak(pw,salt){const m=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",hash:"SHA-256",salt,iterations:600000},m,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
+async function bkExp(){const pw=gv("bpw");if(pw.length<8){alert("A palavra-passe da cópia deve ter pelo menos 8 caracteres.");return}
+const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const k=await ak(pw,salt);
+const c=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},k,new TextEncoder().encode(JSON.stringify({v:2,t:Date.now(),D,P,USERS,A}))));
+await log("backup_exportado");dl("portasegura-backup-"+RD+".json",JSON.stringify({enc:1,s:b64(salt),i:b64(iv),c:b64(c)}))}
+function bkImp(el){const f=el.files[0],pw=gv("bpw");if(!f)return;if(!pw){alert("Introduza a palavra-passe da cópia.");el.value="";return}
+const r=new FileReader();r.onload=async()=>{try{const w=JSON.parse(r.result);if(!w.enc)throw 0;const k=await ak(pw,ub(w.s));const t=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(w.i)},k,ub(w.c));const o=JSON.parse(new TextDecoder().decode(t));
+if(!Array.isArray(o.D)||!Array.isArray(o.P)||!Array.isArray(o.USERS)||!o.USERS.length)throw 0;if(!confirm("Substituir todos os dados actuais por esta cópia?"))return;
+D=o.D;P=o.P;USERS=o.USERS;if(Array.isArray(o.A))A=o.A;sv();svp();svu();try{localStorage.setItem("ps_a",JSON.stringify(A))}catch(e){}await log("backup_restaurado");U=null;alert("Cópia restaurada. Inicie sessão novamente.");nav()}catch(e){alert("Ficheiro inválido ou palavra-passe incorrecta.")}};r.readAsText(f)}
+function purge(){if(!RET)return;const lim=Date.now()-RET*864e5,n=D.length;D=D.filter(r=>r.in>=lim||!r.out);if(D.length!==n){sv();log("retencao_purga",String(n-D.length))}}
+function secCard(){document.getElementById("v").insertAdjacentHTML("beforeend",`<div class="card"><b>🔒 Segurança e privacidade</b><label>Retenção de registos (dias; 0 = não apagar)</label><input id="rt" inputmode="numeric" value="${RET}"><br><br><button class="btn gh" onclick="setRet()">Guardar retenção</button><br><br><button class="btn" onclick="audV()">🧾 Ver registo de auditoria</button><div id="aud"></div></div>`)}
+async function setRet(){const v=parseInt(gv("rt"));if(isNaN(v)||v<0||v>3650){alert("Valor inválido (0 a 3650).");return}RET=v;try{localStorage.setItem("ps_ret",String(v))}catch(e){}await log("retencao_alterada",String(v));purge();alert("Guardado.")}
+async function audV(){const ok=await verA();document.getElementById("aud").innerHTML=`<p style="color:var(--${ok?"ok":"no"})"><b>${ok?"✔ Integridade verificada":"✖ Registo alterado ou corrompido"}</b></p><div class="sc"><table><tr><th>Data</th><th>Utilizador</th><th>Evento</th><th>Detalhe</th></tr>${A.slice(-50).reverse().map(e=>`<tr><td>${new Date(e.t).toLocaleString("pt-PT")}</td><td>${esc(e.u)}</td><td>${esc(e.ev)}</td><td>${esc(e.det)}</td></tr>`).join("")}</table></div><p><small class="mu">Cadeia de hashes: detecta alterações acidentais. Contra alguém com acesso total ao aparelho, só um servidor externo dá prova.</small></p>`}
+ld();ldp();initU().then(()=>{purge();nav();render()});
+</script><script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
